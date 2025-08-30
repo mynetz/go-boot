@@ -6,7 +6,9 @@
 package uefi
 
 import (
+	"encoding/binary"
 	"encoding/hex"
+	"fmt"
 	"regexp"
 )
 
@@ -14,6 +16,20 @@ var guidPattern = regexp.MustCompile(`^([[:xdigit:]]{8})-([[:xdigit:]]{4})-([[:x
 
 // GUID represents an EFI GUID (Globally Unique Identifier).
 type GUID string
+
+// GuidFromBytes converts a 16-byte representation back to GUID registry format
+func GuidFromBytes(buf []byte) GUID {
+	if len(buf) != 16 {
+		return ""
+	}
+
+	return GUID(fmt.Sprintf("%08x-%04x-%04x-%x-%x",
+		binary.LittleEndian.Uint32(buf[0:4]),
+		binary.LittleEndian.Uint16(buf[4:6]),
+		binary.LittleEndian.Uint16(buf[6:8]),
+		buf[8:10],
+		buf[10:]))
+}
 
 // Bytes returns the GUID as byte slice.
 func (g GUID) Bytes() (guid []byte) {
